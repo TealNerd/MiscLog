@@ -30,7 +30,7 @@ public class MiscLog {
 	Minecraft mc = Minecraft.getMinecraft();
 	static List<String> previousPlayerList = new ArrayList();
 	Database db;
-	Pattern snitch = Pattern.compile("^ \\* ([a-zA-Z0-9_]+) (?:entered|logged out in|logged in to) snitch at .* \\[(.*) ([-]?[0-9]+) ([-]?[0-9]+) ([-]?[0-9]+)\\]$");
+	Pattern snitch = Pattern.compile("^ \\* ([a-zA-Z0-9_]+) (?:entered|logged out in|logged in to) snitch at (.*) \\[(.*) ([-]?[0-9]+) ([-]?[0-9]+) ([-]?[0-9]+)\\]$");
 	Pattern tpsPattern = Pattern.compile("^TPS from last 1m, 5m, 15m: [*]?([0-9.]+).*$");
 	boolean civcraft = false;
 	int loop = 420;
@@ -79,17 +79,22 @@ public class MiscLog {
 		while(tpsMatcher.find()) {
 			event.setCanceled(true);
 			float tps = Float.parseFloat(tpsMatcher.group(1));
-			db.execute("INSERT INTO tps (tps, time) values ('" + tps + "', '" + System.nanoTime() + "');");
+			db.execute("INSERT INTO tps (tps) values ('" + tps + "');");
 		}
 		Matcher snitchMatcher = snitch.matcher(msg);
 		while(snitchMatcher.find()) {
 			String player = snitchMatcher.group(1);
-			int x = Integer.parseInt(snitchMatcher.group(3));
-			int y = Integer.parseInt(snitchMatcher.group(4));
-			int z = Integer.parseInt(snitchMatcher.group(5));
-			String world = snitchMatcher.group(2);
+			int x = Integer.parseInt(snitchMatcher.group(4));
+			int y = Integer.parseInt(snitchMatcher.group(5));
+			int z = Integer.parseInt(snitchMatcher.group(6));
+			String world = snitchMatcher.group(3);
+			String name = snitchMatcher.group(2);
 			if(civcraft)
-				db.sendSnitch(player, x, y, z, world);
+				db.sendSnitch(player, x, y, z, world, name);
+			if(getDistToSnitch(x, z) < 10) {
+				mc.thePlayer.sendChatMessage("This is a private area, please leave now!");
+				mc.shutdown();
+			}
 		}
 	}
 	
@@ -121,10 +126,20 @@ public class MiscLog {
 	}
 	
 	public void onPlayerJoin(String player) {
-		db.execute("INSERT INTO logins (player, time) values ('" + player + "', '" + System.nanoTime() + "');");
+		db.execute("INSERT INTO logins (player) values ('" + player + "');");
 	}
 	
 	public void onPlayerLeave(String player) {
-		db.execute("INSERT INTO logouts (player, time) values ('" + player + "', '" + System.nanoTime() + "');");
+		db.execute("INSERT INTO logouts (player) values ('" + player + "');");
+	}
+	
+	public double getDistToSnitch(int x, int z) {
+		int px = (int) mc.thePlayer.posX;
+		int pz = (int) mc.thePlayer.posZ;
+		double ix = Math.pow(px - x, 2);
+		double iz = Math.pow(pz - z, 2);
+		double root = iz + ix;
+		double dist = Math.sqrt(root);
+		return dist;
 	}
 }

@@ -73,8 +73,10 @@ public class Database {
         }
     }
     
-    public void sendSnitch(String player, int x, int y, int z, String world) {
-    	execute("INSERT INTO Snitches (player, x, y, z, world, time) values ('" + player + "', '" + x + "', '" +
-    	 y + "', '" + z + "', '" + world + "', '" + System.nanoTime() + "');");
+    public void sendSnitch(String player, int x, int y, int z, String world, String name) {
+    	java.util.Date javaDate = new java.util.Date();
+    	java.sql.Date sqlDate = new java.sql.Date(javaDate.getTime());
+    	execute("INSERT INTO Snitches (player, x, y, z, world, name) values ('" + player + "', '" + x + "', '" +
+    	 y + "', '" + z + "', '" + world + "', '" + name + "');");
     }
 }
