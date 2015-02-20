@@ -7,11 +7,11 @@ import java.sql.SQLException;
 
 public class Database {
 
-	String host = "192.186.225.160";
+	String host = "localhost";
 	int port = 3306;
 	String db = "MiscLog";
-	String user = "teal";
-	String password = "713jhs";
+	String user = "root";
+	String password = "pass";
 	private Connection connection;
 	
 	public boolean connect() {
